@@ -9,7 +9,7 @@ library(ggplot2)
 ```
 Simple features describe how objects in the real world can be represented in computers. They have a geometry describing where on Earth the feature is located, and they have attributes, which describe other properties about the feature. 
 
- The following command reads the site location for Fluxnet CH4 tower locations:
+ The following command reads the site location for <a href= "https://fluxnet.org/data/fluxnet-ch4-community-product" > Fluxnet CH4 tower locations: </a>
  
 ```{r, include=T}
 
@@ -200,11 +200,12 @@ Fluxnet.ch4$IGBP <- as.factor(Fluxnet.ch4$IGBP)
 summary(Fluxnet.ch4$IGBP)
 
 ```
+
 ### Writing files using st_write:
 
+```{r, include=T}
 write_sf(Fluxnet.ch4, "Fluxnet.ch4.shp") 
-
-Create, read, update and delete
+```
 
 GDAL provides the crud (create, read, update, delete) functions to persistent storage. When writing, you can use the following arguments to control update and delete: update=TRUE causes an existing data source to be updated, if it exists; this option is by default TRUE for all database drivers, where the database is updated by adding a table.
 
@@ -218,4 +219,4 @@ Stasch, C., S. Scheider, E. Pebesma, W. Kuhn, 2014. Meaningful Spatial Predictio
 
 # Post Workshop Assessment:
 
-We will use data from FLuxnet CH4 to explore patterns in natural methane emissions. Explore the distribution of tower sites and create 5 visualizations of this dataset that may be helpful to understand in the design and development of models.
+We will use data from FLuxnet CH4 to explore patterns in natural methane emissions. Explore the distribution of tower sites and create 5 visualizations of this dataset that may be helpful to understand in the design and development of models. You are welcome to use any additional data.
