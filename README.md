@@ -1,5 +1,13 @@
 # Introduction to Simple Features in R
 
+# Install libraries for this workshop
+
+install.packages('sf')
+install.packages('devtools')
+devtools::install_github("mikejohnson51/AOI", force = TRUE)
+devtools::install_github("valentinitnelav/plotbiomes")
+
+
 ### Load the required libraries for this workshop
 ```{r, include=T}
 library(sf)
@@ -7,9 +15,16 @@ library(AOI)
 library(tidyverse)
 library(ggplot2)
 ```
-Simple features describe how objects in the real world can be represented in computers. They have a geometry describing where on Earth the feature is located, and they have attributes, which describe other properties about the feature. 
+# Goals
 
- The following command reads the site location for Fluxnet CH4 tower locations:
+The goals of this workshop are to:
+1. Become familiar with simple features
+2. Master simple feature manipulation
+3. Visualize simple features
+
+Simple features describe how objects in the real world can be represented in computers. They have a geometry describing where on earth the feature is located, and they have attributes, which describe other properties about the feature. 
+
+ The following command reads the site location for <a href= "https://fluxnet.org/data/fluxnet-ch4-community-product" > Fluxnet CH4 tower locations: </a>
  
 ```{r, include=T}
 
@@ -17,7 +32,7 @@ Fluxnet.ch4 <- read_sf( dsn= "Data", layer= 'CH4_sites', crs="+init=epsg:4326")
 
 ```
 
-The dsn and layer arguments to st_read denote a data source name and optionally a layer name. Their exact interpretation as well as the options they support vary by driver. When the layer and driver arguments are not specified, st_read tries to guess them from the datasource, or else simply reads the first layer, giving a warning in case there are more.
+The dsn and layer arguments to st_read denote a data source name and optionally a layer name. Their exact interpretation as well as the options they support vary by driver. When the layer and driver arguments are not specified, st_read tries to guess them from the data source, or else simply reads the first layer, giving a warning in case there are more.
 
 st_read typically reads the coordinate reference system as proj4string. GDAL cannot retrieve SRID (EPSG code) from proj4string strings, and, when needed, it has to be set by the user. 
 
@@ -36,12 +51,11 @@ st_layers(dsn) lists the layers present in data source dsn, and gives the number
 st_layers(dsn= "Data")
 
 ```
-we see that in this case, there is one layer with 73 features. 
+In this case, there is one layer with 73 features. 
 
 Look at the class and information about the geometry:
 
 ```{r, include=T}
-
 class( Fluxnet.ch4)
 Fluxnet.ch4$geometry
 ```
@@ -57,26 +71,43 @@ Fluxnet.ch4.df <- as.data.frame(Fluxnet.ch4)
 ```
 Check the class:
 ```{r, include=T}
-class(nc.no_sf)
+class(Fluxnet.ch4.df)
 ```
 Such objects:
 no longer register which column is the geometry list-column
 no longer have a plot method, and
 lack all of the other dedicated methods listed above for class sf
 
+You can also take the dataframe and turn it back into a simple feature:
+
+```{r, include=T}
+new.shp <- st_as_sf(x = Fluxnet.ch4.df,                         
+           coords = c("LOCATION_1",  "LOCATION_L"),
+           crs = "+init=epsg:4326")
+
+ggplot(data=new.shp) + geom_sf()
+```
+
+
 # Geometrical Operations
-The standard for simple feature access defines a number of geometrical operations. 
+
+There are many geometrical operations that can be used to achieve simple feature manipulation.
 
 ```{r, include=T}
 methods(class = "sf")
 ```
+Below we will explore a few methods:
+
 st_is_valid and st_is_simple return a boolean indicating whether a geometry is valid or simple.
 
 ```{r, include=T}
+
 st_is_valid(Fluxnet.ch4)
+
 ```
 ### Change the CRS to a projected EPGS with st_transform.
-Coordinate reference systems (CRS) are like measurement units for coordinates: they specify which location on Earth a particular coordinate pair refers to. Simple feature have two attributes to store a CRS: epsg and proj4string. This implies that all geometries in a geometry list-column must have the same CRS. Both may be NA, e.g. in case the CRS is unknown, or when we work with local coordinate systems (e.g. inside a building, a body, or an abstract space).
+<a href= "https://www.nceas.ucsb.edu/sites/default/files/2020-04/OverviewCoordinateReferenceSystems.pdf"> 
+Coordinate reference systems (CRS) </a> are like measurement units for coordinates: they specify which location on Earth a particular coordinate pair refers to. Simple feature have two attributes to store a CRS: epsg and proj4string. This implies that all geometries in a geometry list-column must have the same CRS. Both may be NA, e.g. in case the CRS is unknown, or when we work with local coordinate systems (e.g. inside a building, a body, or an abstract space).
 
 proj4string is a generic, string-based description of a CRS, understood by the PROJ library. It defines projection types and (often) defines parameter values for particular projections, and hence can cover an infinite amount of different projections. This library (also used by GDAL) provides functions to convert or transform between different CRS. epsg is the integer ID for a particular, known CRS that can be resolved into a proj4string. Some proj4string values can be resolved back into their corresponding epsg ID, but this does not always work.
 
@@ -109,7 +140,6 @@ Brazil <- aoi_get(country= "Brazil", union=T)
 
 # Re-project the Brazil to match Fluxnet.ch4:
 Brazil <- st_transform( Brazil , '+init=epsg:4087') # Re-project the polygon to match Fluxnet.ch4
-
 ```
 The commands st_intersects, st_disjoint, st_touches, st_crosses, st_within, st_contains, st_overlaps, st_equals, st_covers, st_covered_by, st_equals_exact and st_is_within_distance all return a sparse matrix with matching (TRUE) indexes, or a full logical matrix:
 
@@ -131,7 +161,7 @@ st_intersects(Brazil, Fluxnet.ch4)
 
 The commands st_buffer, st_boundary, st_convexhull, st_union_cascaded, st_simplify, st_triangulate, st_polygonize, st_centroid, st_segmentize, and st_union return new geometries.
 
-Create a 100000 buffer around South America 
+Create a 100000 m buffer around South America 
 
 ```{r, include=T}
 
@@ -150,32 +180,37 @@ u <- st_difference(s.america, Brazil)
 plot(u)
 
 ```
-Where possible geometric operations such as st_distance(), st_length() and st_area() report results with a units attribute appropriate for the CRS. Calculate the area of Brazil:
+Where possible geometric operations such as st_distance(), st_length() and st_area() report results with a units attribute appropriate for the CRS. 
+
+Calculate the area of Brazil:
 
 ```{r, include=T}
 Brazil$Area <- st_area( Brazil)
 
 ```
 
-### Visualize the global distribution of towers:
+#### Visualize the global distribution of towers:
 
 First create a simple feature for all large terrestrial regions in Europe, Asia, the Americas, Africa, Australia and New Zealand:
 
 ```{r, include=T}
 
-# Create a a shapefile:
+# Create a shapefile:
 world <- aoi_get(country= c("Europe","Asia" ,"North America", "South America", "Australia","Africa", "New Zealand"))
 
-# Look at the CRS:
-st_crs(world)
-
-# Re-project the polygon to match Fluxnet.ch4:
-world <- st_transform( world , '+init=epsg:4087') 
-
-# Visualize the shapefile you created:
-plot(world)
 ```
-
+ Look at the CRS:
+```{r, include=T}
+st_crs(world)
+``` 
+Re-project the polygon to match Fluxnet.ch4:
+```{r, include=T}
+world <- st_transform( world , '+init=epsg:4087') 
+```
+Visualize the shapefile you created:
+```{r, include=T}
+ggplot(data=world) + geom_sf()
+```
 Use ggplot to visualize the global distribution of Fluxnet CH4 sites:
 
 ```{r, include=T}
@@ -184,9 +219,8 @@ ggplot() + geom_sf(data = world) + geom_sf(data = Fluxnet.ch4)
 
 Extract the country from the world simple feature into Fluxnet.ch4:
 ```{r, include=T}
-Fluxnet.ch4$Country <- st_intersection( world,Fluxnet.ch4)$name
+Fluxnet.ch4$Country <- st_intersection( world, Fluxnet.ch4)$name
 ```
-
 Explore the Fluxnet CH4 sites:
 
 ```{r, include=T}
@@ -200,13 +234,13 @@ Fluxnet.ch4$IGBP <- as.factor(Fluxnet.ch4$IGBP)
 summary(Fluxnet.ch4$IGBP)
 
 ```
+
 ### Writing files using st_write:
 
+```{r, include=T}
 write_sf(Fluxnet.ch4, "Fluxnet.ch4.shp") 
-
-Create, read, update and delete
-
-GDAL provides the crud (create, read, update, delete) functions to persistent storage. When writing, you can use the following arguments to control update and delete: update=TRUE causes an existing data source to be updated, if it exists; this option is by default TRUE for all database drivers, where the database is updated by adding a table.
+```
+When writing, you can use the following arguments to control update and delete: update=TRUE causes an existing data source to be updated, if it exists; this option is by default TRUE for all database drivers, where the database is updated by adding a table.
 
 delete_layer=TRUE causes st_write try to open the data source and delete the layer; no errors are given if the data source is not present, or the layer does not exist in the data source.
 
@@ -218,4 +252,4 @@ Stasch, C., S. Scheider, E. Pebesma, W. Kuhn, 2014. Meaningful Spatial Predictio
 
 # Post Workshop Assessment:
 
-We will use data from FLuxnet CH4 to explore patterns in natural methane emissions. Explore the distribution of tower sites and create 5 visualizations of this dataset that may be helpful to understand in the design and development of models.
+We will use data from FLuxnet CH4 to explore patterns in natural methane emissions. Explore the distribution of tower sites and create 2 visualizations of this dataset that may be helpful to understand in the design and development of models. You are welcome to use any additional data or just new plot types.
