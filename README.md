@@ -1,6 +1,6 @@
 # Introduction to Simple Features in R
 
-# Install libraries for this workshop
+### Install libraries for this workshop
 ```{r, include=T}
 install.packages('sf')
 install.packages('devtools')
