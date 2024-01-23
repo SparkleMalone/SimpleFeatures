@@ -252,4 +252,4 @@ Stasch, C., S. Scheider, E. Pebesma, W. Kuhn, 2014. Meaningful Spatial Predictio
 
 # Post Workshop Assessment:
 
-We will use data from FLuxnet CH4 to explore patterns in natural methane emissions. Explore the distribution of tower sites and create 2 visualizations of this dataset that may be helpful to understand in the design and development of models. You are welcome to use any additional data or just new plot types.
+Explore the distribution of tower sites and create 2 visualizations of this dataset that may be helpful to understand in the design and development of models. You are welcome to use any additional data or just new plot types.
