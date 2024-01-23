@@ -1,12 +1,12 @@
 # Introduction to Simple Features in R
 
 # Install libraries for this workshop
-
+```{r, include=T}
 install.packages('sf')
 install.packages('devtools')
 devtools::install_github("mikejohnson51/AOI", force = TRUE)
 devtools::install_github("valentinitnelav/plotbiomes")
-
+```
 
 ### Load the required libraries for this workshop
 ```{r, include=T}
