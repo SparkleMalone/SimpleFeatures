@@ -30,10 +30,22 @@ Import FluxNet_Sites_2024.csv. This table was created from the FLUXNET site list
 FluxNet <- read.csv('Data/FluxNet_Sites_2024.csv')
 ```
 This dataset includes:
-a unique site id (SITE_ID), the site name (SITE_NAME), the license information for the data for the two FLUXNET Products (FLUXNET2015, FLUXNET-CH4), Location information (LOCATION_LAT, LOCATION_LONG), elevation in meters (LOCATION_ELEV), vegetation type (IGBP), mean annual temperature in Celsius (MAT) and mean annual precipitation in mm (MAP).
+
+ Column Name | Description |
+|------:|-----------|
+|SITE_ID| Unique site id|
+|SITE_NAME|Site name|
+|FLUXNET2015|License information for the data for the two FLUXNET Products|
+|FLUXNET-CH4|License information for the data for the two FLUXNET Products|
+|LOCATION_LAT|Location information|
+|LOCATION_LONG|Location information|
+|LOCATION_ELEV|Elevation in meters|
+|IGBP|Vegetation type|
+|MAT| Mean annual temperature in Celsius|
+|MAT| Mean annual precipitation in mm|
 
 ```{r, include=T}
-View(FluxNet) 
+print(View(FluxNet) )
 ```
 
 We are interested in exploring the sites with methane data. Lets subset by FLUXNET-CH4.
