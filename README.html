@@ -427,71 +427,54 @@ This dataset includes:</p>
 </tr>
 </tbody>
 </table>
-<p><code>{r, include=T} print(View(FluxNet) )</code></p>
-<p>We are interested in exploring the sites with methane data. Lets
-subset by FLUXNET-CH4.</p>
-<p>This object is currently a dataframe. Lets make it a simple feature
-using st_as sf().</p>
+<p>Take a look at the file: ```{r, include=T}</p>
+<p>View(FluxNet)</p>
+<pre><code>
+We are interested in exploring the sites with methane data. Lets subset by FLUXNET-CH4.
+```{r, include=T}
+
+FLUXNET.CH4 &lt;- FluxNet %&gt;% filter( FLUXNET.CH4 != &quot;&quot;)
+</code></pre>
+<p>This object is currently a dataframe.
+<code>{r, include=T} class(FLUXNET.CH4)</code></p>
+<p>Lets make it a simple feature using st_as sf().</p>
+<p>```{r, include=T} FLUXNET.CH4.shp &lt;- st_as_sf(x =
+FLUXNET.CH4,<br />
+coords = c(“LOCATION_LONG”, “LOCATION_LAT”), crs =
+“+init=epsg:4326”)</p>
+<p>ggplot(data=FLUXNET.CH4.shp ) + geom_sf()</p>
+<pre><code>check the class:
+```{r, include=T}
+class(FLUXNET.CH4.shp)</code></pre>
 <p>Simple features describe how objects in the real world can be
 represented in computers. They have a geometry describing where on earth
 the feature is located, and they have attributes, which describe other
 properties about the feature.</p>
-<p>The following command reads the site location for
-<a href="https://fluxnet.org/data/fluxnet-ch4-community-product">
-Fluxnet CH4 tower locations: </a></p>
+<p>Look at the information about the geometry:</p>
 <p>```{r, include=T}</p>
-<p>Fluxnet.ch4 &lt;- read_sf( dsn= “Data”, layer= ‘CH4_sites’,
-crs=“+init=epsg:4326”)</p>
-<pre><code>
-The dsn and layer arguments to st_read denote a data source name and optionally a layer name. Their exact interpretation as well as the options they support vary by driver. When the layer and driver arguments are not specified, st_read tries to guess them from the data source, or else simply reads the first layer, giving a warning in case there are more.
-
-st_read typically reads the coordinate reference system as proj4string. GDAL cannot retrieve SRID (EPSG code) from proj4string strings, and, when needed, it has to be set by the user. 
-
-st_drivers() returns a data.frame listing available drivers, and their metadata: names, whether a driver can write, and whether it is a raster and/or vector driver. All drivers can read. Reading of some common data formats is illustrated below:
+<p>FLUXNET.CH4.shp$geometry</p>
+<pre><code>If we print the first three features, we see their attribute values and an abridged version of the geometry.
 
 ```{r, include=T}
-
-st_drivers( what=&quot;vector&quot;)
-</code></pre>
-<p>st_layers(dsn) lists the layers present in data source dsn, and gives
-the number of fields, features and geometry type for each layer:</p>
-<p>```{r, include=T}</p>
-<p>st_layers(dsn= “Data”)</p>
-<pre><code>In this case, there is one layer with 73 features. 
-
-Look at the class and information about the geometry:
-
-```{r, include=T}
-class( Fluxnet.ch4)
-Fluxnet.ch4$geometry</code></pre>
-<p>If we print the first three features, we see their attribute values
-and an abridged version of the geometry.</p>
-<p><code>{r, include=T} print(Fluxnet.ch4, n = 3)</code> It is possible
-to create data.frame objects with geometry list-columns that are not of
-class sf by:</p>
-<p><code>{r, include=T} Fluxnet.ch4.df &lt;- as.data.frame(Fluxnet.ch4)</code>
+print(FLUXNET.CH4.shp, n = 3)</code></pre>
+<p>It is possible to create data.frame objects with geometry
+list-columns that are not of class sf by:</p>
+<p><code>{r, include=T} Fluxnet.ch4.df &lt;- as.data.frame(FLUXNET.CH4.shp)</code>
 Check the class: <code>{r, include=T} class(Fluxnet.ch4.df)</code> Such
 objects: no longer register which column is the geometry list-column no
 longer have a plot method, and lack all of the other dedicated methods
 listed above for class sf</p>
-<p>You can also take the dataframe and turn it back into a simple
-feature:</p>
-<p>```{r, include=T} new.shp &lt;- st_as_sf(x = Fluxnet.ch4.df,<br />
-coords = c(“LOCATION_1”, “LOCATION_L”), crs = “+init=epsg:4326”)</p>
-<p>ggplot(data=new.shp) + geom_sf()</p>
-<pre><code>
-
-# Geometrical Operations
-
-There are many geometrical operations that can be used to achieve simple feature manipulation.
-
-```{r, include=T}
-methods(class = &quot;sf&quot;)</code></pre>
-<p>Below we will explore a few methods:</p>
+</div>
+<div id="geometrical-operations" class="section level1">
+<h1>Geometrical Operations</h1>
+<p>There are many geometrical operations that can be used to achieve
+simple feature manipulation.</p>
+<p><code>{r, include=T} methods(class = &quot;sf&quot;)</code> Below we will
+explore a few methods:</p>
 <p>st_is_valid and st_is_simple return a boolean indicating whether a
 geometry is valid or simple.</p>
 <p>```{r, include=T}</p>
-<p>st_is_valid(Fluxnet.ch4)</p>
+<p>st_is_valid(FLUXNET.CH4.shp)</p>
 <pre><code>### Change the CRS to a projected EPGS with st_transform.
 &lt;a href= &quot;https://www.nceas.ucsb.edu/sites/default/files/2020-04/OverviewCoordinateReferenceSystems.pdf&quot;&gt; 
 Coordinate reference systems (CRS) &lt;/a&gt; are like measurement units for coordinates: they specify which location on Earth a particular coordinate pair refers to. Simple feature have two attributes to store a CRS: epsg and proj4string. This implies that all geometries in a geometry list-column must have the same CRS. Both may be NA, e.g. in case the CRS is unknown, or when we work with local coordinate systems (e.g. inside a building, a body, or an abstract space).
@@ -502,11 +485,11 @@ The importance of having epsg values stored with data besides proj4string values
 Coordinate reference system transformations can be carried out using st_transform
 
 ```{r, include=T}
-Fluxnet.ch4 = st_transform(Fluxnet.ch4, &#39;+init=epsg:4087&#39;)</code></pre>
-<p>Check the CRS: <code>{r, include=T} st_crs(Fluxnet.ch4)</code>
+FLUXNET.CH4.shp = st_transform(FLUXNET.CH4.shp, &#39;+init=epsg:4087&#39;)</code></pre>
+<p>Check the CRS: <code>{r, include=T} st_crs(FLUXNET.CH4.shp)</code>
 st_distance returns a dense numeric matrix with distances between
 geometries:</p>
-<p><code>{r, include=T} st_distance(Fluxnet.ch4[1,], Fluxnet.ch4)</code>
+<p><code>{r, include=T} st_distance(FLUXNET.CH4.shp[1,], FLUXNET.CH4.shp)</code>
 Use the package AOI to generate a polygon for South America and
 Brazil:</p>
 <p>```{r, include=T} # Creates a simple feature of South America:
@@ -538,22 +521,6 @@ st_intersects(s.america, Fluxnet.ch4, sparse = FALSE)
 <h1>How many towers are in Brazil?</h1>
 <p>```{r, include=T}</p>
 <p>st_intersects(Brazil, Fluxnet.ch4)</p>
-<pre><code>
-The commands st_buffer, st_boundary, st_convexhull, st_union_cascaded, st_simplify, st_triangulate, st_polygonize, st_centroid, st_segmentize, and st_union return new geometries.
-
-Create a 100000 m buffer around South America 
-
-```{r, include=T}
-
-buffer &lt;- st_buffer(s.america, dist = 100000)
-</code></pre>
-<p>Look at the buffer you created in base R:
-<code>{r, include=T} plot(buffer, border = &#39;red&#39;) plot(s.america, add=T)</code>
-Commands st_intersection, st_union, st_difference, st_sym_difference
-return new geometries that are a function of pairs of geometries. Use
-st_difference to remove Brazil from South America:</p>
-<p>```{r, include=T} u &lt;- st_difference(s.america, Brazil)
-plot(u)</p>
 <pre><code>Where possible geometric operations such as st_distance(), st_length() and st_area() report results with a units attribute appropriate for the CRS. 
 
 Calculate the area of Brazil:
@@ -575,26 +542,27 @@ Europe, Asia, the Americas, Africa, Australia and New Zealand:</p>
 <pre><code> Look at the CRS:
 ```{r, include=T}
 st_crs(world)</code></pre>
-<p>Re-project the polygon to match Fluxnet.ch4:
+<p>Re-project the polygon to match FLUXNET.CH4.shp:
 <code>{r, include=T} world &lt;- st_transform( world , &#39;+init=epsg:4087&#39;)</code>
 Visualize the shapefile you created:
 <code>{r, include=T} ggplot(data=world) + geom_sf()</code> Use ggplot to
 visualize the global distribution of Fluxnet CH4 sites:</p>
-<p><code>{r, include=T} ggplot() + geom_sf(data = world) + geom_sf(data = Fluxnet.ch4)</code></p>
-<p>Extract the country from the world simple feature into Fluxnet.ch4:
-<code>{r, include=T} Fluxnet.ch4$Country &lt;- st_intersection( world, Fluxnet.ch4)$name</code>
+<p><code>{r, include=T} ggplot() + geom_sf(data = world) + geom_sf(data = FLUXNET.CH4.shp)</code></p>
+<p>Extract the country from the world simple feature into
+FLUXNET.CH4.shp:
+<code>{r, include=T} FLUXNET.CH4.shp$Country &lt;- st_intersection( world, FLUXNET.CH4.shp)$name</code>
 Explore the Fluxnet CH4 sites:</p>
-<p>```{r, include=T} names(Fluxnet.ch4)</p>
-<p>ggplot(data=Fluxnet.ch4) + geom_point( aes(x=MAT, y=MAP))</p>
-<p>ggplot(data=Fluxnet.ch4) + geom_point( aes(x=MAT, y=MAP,
+<p>```{r, include=T} names(FLUXNET.CH4.shp)</p>
+<p>ggplot(data= FLUXNET.CH4.shp) + geom_point( aes(x=MAT, y=MAP))</p>
+<p>ggplot(data= FLUXNET.CH4.shp) + geom_point( aes(x=MAT, y=MAP,
 col=IGBP))</p>
-<p>Fluxnet.ch4<span class="math inline">\(IGBP &lt;-
-as.factor(Fluxnet.ch4\)</span>IGBP) summary(Fluxnet.ch4$IGBP)</p>
+<p>FLUXNET.CH4.shp<span class="math inline">\(IGBP &lt;- as.factor(
+FLUXNET.CH4.shp\)</span>IGBP) summary(FLUXNET.CH4.shp$IGBP)</p>
 <pre><code>
 ### Writing files using st_write:
 
 ```{r, include=T}
-write_sf(Fluxnet.ch4, &quot;Fluxnet.ch4.shp&quot;) </code></pre>
+write_sf(FLUXNET.CH4.shp, &quot;FLUXNET.CH4.shp&quot;) </code></pre>
 <p>When writing, you can use the following arguments to control update
 and delete: update=TRUE causes an existing data source to be updated, if
 it exists; this option is by default TRUE for all database drivers,
