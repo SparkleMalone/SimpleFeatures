@@ -22,6 +22,24 @@ The goals of this workshop are to:
 2. Master simple feature manipulation
 3. Visualize simple features
 
+# Data
+
+Import FluxNet_Sites_2024.csv. This table was created from the FLUXNET site list found at  https://fluxnet.org/sites/site-list-and-pages/?view=table. 
+
+```{r, include=T}
+FluxNet <- read.csv('Data/FluxNet_Sites_2024.csv')
+```
+This dataset includes:
+a unique site id (SITE_ID), the site name (SITE_NAME), the license information for the data for the two FLUXNET Products (FLUXNET2015, FLUXNET-CH4), Location information (LOCATION_LAT, LOCATION_LONG), elevation in meters (LOCATION_ELEV), vegetation type (IGBP), mean annual temperature in Celsius (MAT) and mean annual precipitation in mm (MAP).
+
+```{r, include=T}
+View(FluxNet) 
+```
+
+We are interested in exploring the sites with methane data. Lets subset by FLUXNET-CH4.
+
+This object is currently a dataframe. Lets make it a simple feature using st_as sf().
+
 Simple features describe how objects in the real world can be represented in computers. They have a geometry describing where on earth the feature is located, and they have attributes, which describe other properties about the feature. 
 
  The following command reads the site location for <a href= "https://fluxnet.org/data/fluxnet-ch4-community-product" > Fluxnet CH4 tower locations: </a>
