@@ -1,5 +1,13 @@
 # Introduction to Simple Features in R
 
+### Install libraries for this workshop
+```{r, include=T}
+install.packages('sf')
+install.packages('devtools')
+devtools::install_github("mikejohnson51/AOI", force = TRUE)
+devtools::install_github("valentinitnelav/plotbiomes")
+```
+
 ### Load the required libraries for this workshop
 ```{r, include=T}
 library(sf)
@@ -14,52 +22,78 @@ The goals of this workshop are to:
 2. Master simple feature manipulation
 3. Visualize simple features
 
+# Data
+
+Import FluxNet_Sites_2024.csv. This table was created from the FLUXNET site list found at  https://fluxnet.org/sites/site-list-and-pages/?view=table. 
+
+```{r, include=T}
+FluxNet <- read.csv('Data/FluxNet_Sites_2024.csv')
+```
+This dataset includes:
+
+ Column Name | Description |
+|------:|-----------|
+|SITE_ID| Unique site id|
+|SITE_NAME|Site name|
+|FLUXNET2015|License information for the data for the two FLUXNET Products|
+|FLUXNET-CH4|License information for the data for the two FLUXNET Products|
+|LOCATION_LAT|Location information|
+|LOCATION_LONG|Location information|
+|LOCATION_ELEV|Elevation in meters|
+|IGBP|Vegetation type|
+|MAT| Mean annual temperature in Celsius|
+|MAT| Mean annual precipitation in mm|
+
+Take a look at the file:
+```{r, include=T}
+
+View(FluxNet) 
+
+```
+
+We are interested in exploring the sites with methane data. Lets subset by FLUXNET-CH4.
+```{r, include=T}
+
+FLUXNET.CH4 <- FluxNet %>% filter( FLUXNET.CH4 != "")
+
+```
+
+This object is currently a dataframe. 
+```{r, include=T}
+class(FLUXNET.CH4)
+```
+
+Lets make it a simple feature using st_as sf().
+
+```{r, include=T}
+FLUXNET.CH4.shp <- st_as_sf(x = FLUXNET.CH4,                         
+           coords = c("LOCATION_LONG",  "LOCATION_LAT"),
+           crs = "+init=epsg:4326")
+
+ggplot(data=FLUXNET.CH4.shp ) + geom_sf()
+
+```
+check the class:
+```{r, include=T}
+class(FLUXNET.CH4.shp)
+```
 Simple features describe how objects in the real world can be represented in computers. They have a geometry describing where on earth the feature is located, and they have attributes, which describe other properties about the feature. 
 
- The following command reads the site location for <a href= "https://fluxnet.org/data/fluxnet-ch4-community-product" > Fluxnet CH4 tower locations: </a>
- 
-```{r, include=T}
-
-Fluxnet.ch4 <- read_sf( dsn= "Data", layer= 'CH4_sites', crs="+init=epsg:4326")
-
-```
-
-The dsn and layer arguments to st_read denote a data source name and optionally a layer name. Their exact interpretation as well as the options they support vary by driver. When the layer and driver arguments are not specified, st_read tries to guess them from the data source, or else simply reads the first layer, giving a warning in case there are more.
-
-st_read typically reads the coordinate reference system as proj4string. GDAL cannot retrieve SRID (EPSG code) from proj4string strings, and, when needed, it has to be set by the user. 
-
-st_drivers() returns a data.frame listing available drivers, and their metadata: names, whether a driver can write, and whether it is a raster and/or vector driver. All drivers can read. Reading of some common data formats is illustrated below:
+Look at the information about the geometry:
 
 ```{r, include=T}
 
-st_drivers( what="vector")
-
-```
-
-st_layers(dsn) lists the layers present in data source dsn, and gives the number of fields, features and geometry type for each layer:
-
-```{r, include=T}
-
-st_layers(dsn= "Data")
-
-```
-In this case, there is one layer with 73 features. 
-
-Look at the class and information about the geometry:
-
-```{r, include=T}
-class( Fluxnet.ch4)
-Fluxnet.ch4$geometry
+FLUXNET.CH4.shp$geometry
 ```
 If we print the first three features, we see their attribute values and an abridged version of the geometry.
 
 ```{r, include=T}
-print(Fluxnet.ch4, n = 3)
+print(FLUXNET.CH4.shp, n = 3)
 ```
 It is possible to create data.frame objects with geometry list-columns that are not of class sf by:
 
 ```{r, include=T}
-Fluxnet.ch4.df <- as.data.frame(Fluxnet.ch4)
+Fluxnet.ch4.df <- as.data.frame(FLUXNET.CH4.shp)
 ```
 Check the class:
 ```{r, include=T}
@@ -69,17 +103,6 @@ Such objects:
 no longer register which column is the geometry list-column
 no longer have a plot method, and
 lack all of the other dedicated methods listed above for class sf
-
-You can also take the dataframe and turn it back into a simple feature:
-
-```{r, include=T}
-new.shp <- st_as_sf(x = Fluxnet.ch4.df,                         
-           coords = c("LOCATION_1",  "LOCATION_L"),
-           crs = "+init=epsg:4326")
-
-ggplot(data=new.shp) + geom_sf()
-```
-
 
 # Geometrical Operations
 
@@ -94,7 +117,7 @@ st_is_valid and st_is_simple return a boolean indicating whether a geometry is v
 
 ```{r, include=T}
 
-st_is_valid(Fluxnet.ch4)
+st_is_valid(FLUXNET.CH4.shp)
 
 ```
 ### Change the CRS to a projected EPGS with st_transform.
@@ -107,16 +130,16 @@ The importance of having epsg values stored with data besides proj4string values
 Coordinate reference system transformations can be carried out using st_transform
 
 ```{r, include=T}
-Fluxnet.ch4 = st_transform(Fluxnet.ch4, '+init=epsg:4087')
+FLUXNET.CH4.shp = st_transform(FLUXNET.CH4.shp, '+init=epsg:4087')
 ```
 Check the CRS:
 ```{r, include=T}
-st_crs(Fluxnet.ch4)
+st_crs(FLUXNET.CH4.shp)
 ```
 st_distance returns a dense numeric matrix with distances between geometries:
 
 ```{r, include=T}
-st_distance(Fluxnet.ch4[1,], Fluxnet.ch4)
+st_distance(FLUXNET.CH4.shp[1,], FLUXNET.CH4.shp)
 ```
 Use the package AOI to generate a polygon for South America and Brazil:
 
@@ -150,28 +173,6 @@ st_intersects(s.america, Fluxnet.ch4, sparse = FALSE)
 st_intersects(Brazil, Fluxnet.ch4)
 
 ```
-
-The commands st_buffer, st_boundary, st_convexhull, st_union_cascaded, st_simplify, st_triangulate, st_polygonize, st_centroid, st_segmentize, and st_union return new geometries.
-
-Create a 100000 m buffer around South America 
-
-```{r, include=T}
-
-buffer <- st_buffer(s.america, dist = 100000)
-
-```
-Look at the buffer you created in base R:
-```{r, include=T}
-plot(buffer, border = 'red')
-plot(s.america, add=T)
-```
-Commands st_intersection, st_union, st_difference, st_sym_difference return new geometries that are a function of pairs of geometries. Use st_difference to remove Brazil from South America:
-
-```{r, include=T}
-u <- st_difference(s.america, Brazil)
-plot(u)
-
-```
 Where possible geometric operations such as st_distance(), st_length() and st_area() report results with a units attribute appropriate for the CRS. 
 
 Calculate the area of Brazil:
@@ -180,7 +181,6 @@ Calculate the area of Brazil:
 Brazil$Area <- st_area( Brazil)
 
 ```
-
 #### Visualize the global distribution of towers:
 
 First create a simple feature for all large terrestrial regions in Europe, Asia, the Americas, Africa, Australia and New Zealand:
@@ -195,7 +195,7 @@ world <- aoi_get(country= c("Europe","Asia" ,"North America", "South America", "
 ```{r, include=T}
 st_crs(world)
 ``` 
-Re-project the polygon to match Fluxnet.ch4:
+Re-project the polygon to match FLUXNET.CH4.shp:
 ```{r, include=T}
 world <- st_transform( world , '+init=epsg:4087') 
 ```
@@ -206,31 +206,31 @@ ggplot(data=world) + geom_sf()
 Use ggplot to visualize the global distribution of Fluxnet CH4 sites:
 
 ```{r, include=T}
-ggplot() + geom_sf(data = world) + geom_sf(data = Fluxnet.ch4) 
+ggplot() + geom_sf(data = world) + geom_sf(data = FLUXNET.CH4.shp) 
 ```
 
-Extract the country from the world simple feature into Fluxnet.ch4:
+Extract the country from the world simple feature into FLUXNET.CH4.shp:
 ```{r, include=T}
-Fluxnet.ch4$Country <- st_intersection( world, Fluxnet.ch4)$name
+FLUXNET.CH4.shp$Country <- st_intersection( world, FLUXNET.CH4.shp)$name
 ```
 Explore the Fluxnet CH4 sites:
 
 ```{r, include=T}
-names(Fluxnet.ch4)
+names(FLUXNET.CH4.shp)
 
-ggplot(data=Fluxnet.ch4) + geom_point( aes(x=MAT, y=MAP))
+ggplot(data= FLUXNET.CH4.shp) + geom_point( aes(x=MAT, y=MAP))
 
-ggplot(data=Fluxnet.ch4) + geom_point( aes(x=MAT, y=MAP, col=IGBP))
+ggplot(data= FLUXNET.CH4.shp) + geom_point( aes(x=MAT, y=MAP, col=IGBP))
 
-Fluxnet.ch4$IGBP <- as.factor(Fluxnet.ch4$IGBP)
-summary(Fluxnet.ch4$IGBP)
+FLUXNET.CH4.shp$IGBP <- as.factor( FLUXNET.CH4.shp$IGBP)
+summary(FLUXNET.CH4.shp$IGBP)
 
 ```
 
 ### Writing files using st_write:
 
 ```{r, include=T}
-write_sf(Fluxnet.ch4, "Fluxnet.ch4.shp") 
+write_sf(FLUXNET.CH4.shp, "FLUXNET.CH4.shp") 
 ```
 When writing, you can use the following arguments to control update and delete: update=TRUE causes an existing data source to be updated, if it exists; this option is by default TRUE for all database drivers, where the database is updated by adding a table.
 
@@ -244,4 +244,4 @@ Stasch, C., S. Scheider, E. Pebesma, W. Kuhn, 2014. Meaningful Spatial Predictio
 
 # Post Workshop Assessment:
 
-We will use data from FLuxnet CH4 to explore patterns in natural methane emissions. Explore the distribution of tower sites and create 5 visualizations of this dataset that may be helpful to understand in the design and development of models. Look for patterns. You are welcome to use any additional data.
+Explore the distribution of tower sites and create 2 visualizations of this dataset that may be helpful to understand in the design and development of models. You are welcome to use any additional data or just new plot types.
